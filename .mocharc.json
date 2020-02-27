@@ -1,0 +1,11 @@
+{
+    "diff": true,
+    "extension": [
+        "js"
+    ],
+    "package": "Spackage.json",
+    "reporter": "spec",
+    "slow": 10000,
+    "timeout": 15000,
+    "ui": "bdd"
+}
