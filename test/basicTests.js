@@ -16,17 +16,15 @@ describe('basic tests', function () {
             .setChromeOptions(new Options().headless())
             .build();
         actions = driver.actions();
+        await driver.get(website);
     });
     
     afterEach(async () => {
         await driver.quit();
     });
 
-    it('should go to decora.ee and assert the title', async function () {
-        await driver.get('https://www.google.com');
-        await driver.findElement(By.name('q')).sendKeys('decora.ee', Key.ENTER);
-        await driver.wait(until.elementLocated(By.id('search')));
-        await driver.findElement(By.partialLinkText('decora.ee')).click();
+    it('assert the title', async function () {
+ 
         const title = await driver.getTitle();
 
         expect(title).to.equal('Decora | Tavalisest parem ehituspood! | Ostle mugavalt e-poes decora.ee');
@@ -39,7 +37,6 @@ describe('basic tests', function () {
             'https://www.youtube.com/channel/UCVxJu_qU76PJKBp9nbjzN8g',
         ];
 
-        await driver.get(website);
         const elems = await driver.findElements(By.css('.social-media-button > a'));
 
         for (const href of elems) {
@@ -49,7 +46,7 @@ describe('basic tests', function () {
     });
 
     it('should search for "tapeet", take first result and add it to cart and check if cart contains one element', async () => {
-        await driver.get(website);
+
         await driver.findElement(By.id('search')).sendKeys('tapeet', Key.ENTER);
         await driver.wait(until.elementsLocated(By.className('product-item-link')));
         const addToCarts = await driver.findElements(By.css('form > .action.tocart.primary'));
