@@ -58,7 +58,7 @@ describe('basic tests', async function () {
         for (let i = 0; i < 3; i++) {
             await actions.clear();
             await actions.click(addToCarts[i]).perform();
-            await driver.sleep(8000);
+            await driver.sleep(10000);
         }
         
         // Wait because that site is slow
@@ -120,7 +120,7 @@ describe('basic tests', async function () {
         for (let i = 0; i < 3; i++) {
             await actions.clear();
             await actions.click(addToCarts[i]).perform();
-            await driver.sleep(8000);
+            await driver.sleep(10000);
         }
         
         await driver.sleep(8000);
@@ -140,8 +140,14 @@ describe('basic tests', async function () {
         await actions.clear();
         await actions.click(deleteButtons[0]).perform();
         await driver.sleep(8000);
+        
+        const acceptButtons = await driver.findElements(By.css('.action-primary.action-accept'));
+
+        await actions.clear();
+        await actions.click(acceptButtons[0]).perform();
+        await driver.sleep(8000);
     
         const newCartItems = await driver.findElements(By.css('.product-item-details > .product-item-name > a[data-bind]'));
-        assert.strictEqual(newCartItems, 2, 'Cart should now have 1 item fewer (2 total)');
+        assert.strictEqual(newCartItems.length, 2, 'Cart should now have 1 item fewer (2 total)');
     });
 });
