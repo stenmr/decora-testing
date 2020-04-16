@@ -1,6 +1,6 @@
 const { Builder, By, Key, until } = require('selenium-webdriver');
 const { Options } = require('selenium-webdriver/chrome');
-const { expect } = require('chai');
+const { expect, assert } = require('chai');
 
 // Arrow functions are discouraged due to the way "this" gets passed
 
@@ -9,17 +9,17 @@ let actions = null;
 
 const website = 'https://www.decora.ee/';
 
-describe('basic tests', function () {
-    beforeEach(async () => {
+describe('basic tests', async function () {
+    beforeEach('Initiate new driver', async () => {
         driver = await new Builder()
             .forBrowser('chrome')
-            .setChromeOptions(new Options().headless())
+            // .setChromeOptions(new Options().headless())
             .build();
         actions = driver.actions();
         await driver.get(website);
     });
     
-    afterEach(async () => {
+    afterEach('Kill driver', async () => {
         await driver.quit();
     });
 
@@ -45,16 +45,24 @@ describe('basic tests', function () {
         }
     });
 
-    it('should search for "tapeet", take first result and add it to cart and check if cart contains one element', async () => {
-
+    it('should search for "tapeet", add first three results to cart and check if modal cart contains 3 elements, increase and decrease item count, ending with 2 items in card', async () => {
+        
         await driver.findElement(By.id('search')).sendKeys('tapeet', Key.ENTER);
         await driver.wait(until.elementsLocated(By.className('product-item-link')));
+
         const addToCarts = await driver.findElements(By.css('form > .action.tocart.primary'));
 
-        // We click on first result from search
-        await actions.click(addToCarts[0]).perform();
+        expect(addToCarts, 'Find more than 2 results').to.have.lengthOf.greaterThan(2);
+            
+        // We click 'add to cart' on the first three results
+        for (let i = 0; i < 3; i++) {
+            await actions.clear();
+            await actions.click(addToCarts[i]).perform();
+            await driver.sleep(8000);
+        }
+        
 
-        // Wait 8 seconds because that site is slow
+        // Wait 3 seconds because that site is slow
         // TODO: replace this with checking cart total
         await driver.sleep(8000);
 
@@ -62,10 +70,108 @@ describe('basic tests', function () {
         const showCart = await driver.findElements(By.css('.action.showcart'));
 
         await actions.click(showCart[0]).perform();
-
+        
         const cartItems = await driver.findElements(By.css('.product-item-details > .product-item-name > a[data-bind]'));
+        
+        // Since we added three items, it should have three items
+        expect(cartItems, 'There are exactly 3 items in the cart').to.have.lengthOf(3);
 
-        // Since we added one item, it should have just one item
-        expect(cartItems).to.have.lengthOf(1);
+        async function getCartElements() {
+            const plusButtons = await driver.findElements(By.css('.update-cart-item-plus'));
+            const minusButtons = await driver.findElements(By.css('.update-cart-item-minus'));
+            const quantityValues = await driver.findElements(By.css('.item-qty.cart-item-qty'));
+            return [plusButtons, minusButtons, quantityValues];
+        }
+
+        let [plusButtons, minusButtons, quantityValues] = [...await getCartElements()];
+
+        for (const value of [plusButtons, minusButtons, quantityValues]) {
+            expect(value).to.have.lengthOf.greaterThan(2);
+        }
+
+        const originalQty = await quantityValues[0].getAttribute('data-item-qty');
+
+        // for (let i = 0; i < 3; i++) {
+        await actions.clear();
+        await actions.click(plusButtons[0]).perform();
+        await driver.sleep(8000);
+        // }
+        [plusButtons, minusButtons, quantityValues] = [...await getCartElements()];
+
+        const newQty = await quantityValues[0].getAttribute('data-item-qty');
+
+        expect(Number(originalQty) + 1, 'Second item quantity in cart is 3 more than before').to.equal(Number(newQty));
+
+        await actions.clear();
+        await actions.click(minusButtons[2]).perform();
+        await driver.sleep(10000);
+
+        const newQuantityValues = await driver.findElements(By.css('.item-qty.cart-item-qty'));
+        assert.strictEqual(newQuantityValues.length, quantityValues.length - 1, 'Cart should now have 1 item fewer');
+    });
+
+    it('should search for "vaip", add first three results to cart and check if modal cart contains 3 elements, increase and decrease item count, ending with 2 items in card', async () => {
+        await driver.findElement(By.id('search')).sendKeys('vaip', Key.ENTER);
+        await driver.wait(until.elementsLocated(By.className('product-item-link')));
+
+        const addToCarts = await driver.findElements(By.css('form > .action.tocart.primary'));
+
+        expect(addToCarts, 'Find more than 2 results').to.have.lengthOf.greaterThan(2);
+            
+        // We click 'add to cart' on the first three results
+        for (let i = 0; i < 3; i++) {
+            await actions.clear();
+            await actions.click(addToCarts[i]).perform();
+            await driver.sleep(8000);
+        }
+        
+
+        // Wait 3 seconds because that site is slow
+        // TODO: replace this with checking cart total
+        await driver.sleep(8000);
+
+        // Cart button is a class for some reason
+        const showCart = await driver.findElements(By.css('.action.showcart'));
+
+        await actions.click(showCart[0]).perform();
+        
+        const cartItems = await driver.findElements(By.css('.product-item-details > .product-item-name > a[data-bind]'));
+        
+        // Since we added three items, it should have three items
+        expect(cartItems, 'There are exactly 3 items in the cart').to.have.lengthOf(3);
+
+        async function getCartElements() {
+            const plusButtons = await driver.findElements(By.css('.update-cart-item-plus'));
+            const minusButtons = await driver.findElements(By.css('.update-cart-item-minus'));
+            const quantityValues = await driver.findElements(By.css('.item-qty.cart-item-qty'));
+            return [plusButtons, minusButtons, quantityValues];
+        }
+
+        let [plusButtons, minusButtons, quantityValues] = [...await getCartElements()];
+
+        for (const value of [plusButtons, minusButtons, quantityValues]) {
+            expect(value).to.have.lengthOf.greaterThan(2);
+        }
+
+        const originalQty = await quantityValues[0].getAttribute('data-item-qty');
+
+        // for (let i = 0; i < 3; i++) {
+        await actions.clear();
+        await actions.click(plusButtons[0]).perform();
+        await driver.sleep(8000);
+        // }
+        [plusButtons, minusButtons, quantityValues] = [...await getCartElements()];
+
+        const newQty = await quantityValues[0].getAttribute('data-item-qty');
+
+        expect(Number(originalQty) + 1, 'Second item quantity in cart is 3 more than before').to.equal(Number(newQty));
+
+        await actions.clear();
+        await actions.click(minusButtons[2]).perform();
+        await driver.sleep(10000);
+
+        const newQuantityValues = await driver.findElements(By.css('.item-qty.cart-item-qty'));
+        assert.strictEqual(newQuantityValues.length, quantityValues.length - 1, 'Cart should now have 1 item fewer');
+    
     });
 });
