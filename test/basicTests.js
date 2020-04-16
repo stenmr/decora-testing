@@ -61,8 +61,7 @@ describe('basic tests', async function () {
             await driver.sleep(8000);
         }
         
-
-        // Wait 3 seconds because that site is slow
+        // Wait because that site is slow
         // TODO: replace this with checking cart total
         await driver.sleep(8000);
 
@@ -91,11 +90,10 @@ describe('basic tests', async function () {
 
         const originalQty = await quantityValues[0].getAttribute('data-item-qty');
 
-        // for (let i = 0; i < 3; i++) {
         await actions.clear();
         await actions.click(plusButtons[0]).perform();
         await driver.sleep(8000);
-        // }
+
         [plusButtons, minusButtons, quantityValues] = [...await getCartElements()];
 
         const newQty = await quantityValues[0].getAttribute('data-item-qty');
@@ -107,10 +105,10 @@ describe('basic tests', async function () {
         await driver.sleep(10000);
 
         const newQuantityValues = await driver.findElements(By.css('.item-qty.cart-item-qty'));
-        assert.strictEqual(newQuantityValues.length, quantityValues.length - 1, 'Cart should now have 1 item fewer');
+        assert.strictEqual(newQuantityValues.length, 2, 'Cart should now have 1 item fewer (2 total)');
     });
 
-    it('should search for "vaip", add first three results to cart and check if modal cart contains 3 elements, increase and decrease item count, ending with 2 items in card', async () => {
+    it('should search for "vaip", add first three results to cart and check if modal cart contains 3 elements, remove 1 item', async () => {
         await driver.findElement(By.id('search')).sendKeys('vaip', Key.ENTER);
         await driver.wait(until.elementsLocated(By.className('product-item-link')));
 
@@ -125,9 +123,6 @@ describe('basic tests', async function () {
             await driver.sleep(8000);
         }
         
-
-        // Wait 3 seconds because that site is slow
-        // TODO: replace this with checking cart total
         await driver.sleep(8000);
 
         // Cart button is a class for some reason
@@ -140,38 +135,13 @@ describe('basic tests', async function () {
         // Since we added three items, it should have three items
         expect(cartItems, 'There are exactly 3 items in the cart').to.have.lengthOf(3);
 
-        async function getCartElements() {
-            const plusButtons = await driver.findElements(By.css('.update-cart-item-plus'));
-            const minusButtons = await driver.findElements(By.css('.update-cart-item-minus'));
-            const quantityValues = await driver.findElements(By.css('.item-qty.cart-item-qty'));
-            return [plusButtons, minusButtons, quantityValues];
-        }
+        const deleteButtons = await driver.findElements(By.css('.action.delete'));
 
-        let [plusButtons, minusButtons, quantityValues] = [...await getCartElements()];
-
-        for (const value of [plusButtons, minusButtons, quantityValues]) {
-            expect(value).to.have.lengthOf.greaterThan(2);
-        }
-
-        const originalQty = await quantityValues[0].getAttribute('data-item-qty');
-
-        // for (let i = 0; i < 3; i++) {
         await actions.clear();
-        await actions.click(plusButtons[0]).perform();
+        await actions.click(deleteButtons[0]).perform();
         await driver.sleep(8000);
-        // }
-        [plusButtons, minusButtons, quantityValues] = [...await getCartElements()];
-
-        const newQty = await quantityValues[0].getAttribute('data-item-qty');
-
-        expect(Number(originalQty) + 1, 'Second item quantity in cart is 3 more than before').to.equal(Number(newQty));
-
-        await actions.clear();
-        await actions.click(minusButtons[2]).perform();
-        await driver.sleep(10000);
-
-        const newQuantityValues = await driver.findElements(By.css('.item-qty.cart-item-qty'));
-        assert.strictEqual(newQuantityValues.length, quantityValues.length - 1, 'Cart should now have 1 item fewer');
     
+        const newCartItems = await driver.findElements(By.css('.product-item-details > .product-item-name > a[data-bind]'));
+        assert.strictEqual(newCartItems, 2, 'Cart should now have 1 item fewer (2 total)');
     });
 });
