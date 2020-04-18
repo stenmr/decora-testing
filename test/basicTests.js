@@ -13,7 +13,7 @@ describe('basic tests', async function () {
     beforeEach('Initiate new driver', async () => {
         driver = await new Builder()
             .forBrowser('chrome')
-            // .setChromeOptions(new Options().headless())
+            .setChromeOptions(new Options().headless())
             .build();
         actions = driver.actions();
         await driver.get(website);
